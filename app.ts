@@ -1,81 +1,67 @@
-import { App } from '@slack/bolt';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
+import express from 'express';
+
 const prisma = new PrismaClient();
 
 dotenv.config();
 
-// Initializes your app with your bot token and signing secretd
-const app = new App({
-    token: process.env.SLACK_BOT_TOKEN,
-    signingSecret: process.env.SLACK_SIGNING_SECRET,
-    socketMode: true, // add this
-    appToken: process.env.SLACK_APP_TOKEN // add this
-  });
+const app = express();
 
-  app.message(/2:46|246/, async ({ message, client }) => {
+app.use(express.json());
 
-    if (message.subtype) return;
-    const timestamp = new Date(Number(message.ts) * 1000);
-    // if((timestamp.getHours() === 2 || timestamp.getHours() === 14) && timestamp.getMinutes() === 46) {
-      app.client.reactions.add({ channel: message.channel, timestamp: message.ts, name: "lobster" })
-      app.client.reactions.add({ channel: message.channel, timestamp: message.ts, name: "eyes" })
-
-      console.log(message.user);
-
-      const result = await client.users.info({
-        user: message.user,
-     });
-
-      if(message.user && result.user && result.user.name) {
-        const user = await prisma.user.upsert({
-          where:{slackID: message.user},
-          update: { 
-            slackID: message.user,
-            username: result.user?.name,
-            weeklyHits: {increment: 1},
-            monthlyHits: {increment: 1},
-            yearlyHits: {increment: 1},
-            allTimeHits: {increment: 1},
-            credits: 0, },
-          create: { 
-            slackID: message.user,
-            username: result.user.name,
-            weeklyHits: 0,
-            monthlyHits: 0,
-            yearlyHits: 0,
-            allTimeHits: 0,
-            credits: 0, 
-          },
-        });
-        console.log(user);
-      }
-
-      // }
-
-    if((timestamp.getHours() === 2 || timestamp.getHours() === 14) && timestamp.getMinutes() === 46) {
-      app.client.reactions.add({ channel: message.channel, timestamp: message.ts, name: "skull" })
-    }
-    });
-
-    async function userExists(userId: string): Promise<boolean> {
-      const exists = await prisma.user.findFirst({
+app.get("/transactions/:userId", async (req, res) => {
+    const userId = parseInt(req.params.userId);
+    const transactions = await prisma.transaction.findMany({
         where: {
-          slackID: userId,
+            userId: userId,
         },
-      }).then(data => {
-        console.log(data);
-        if(data) {
-          return true;
-        } else {
-          return false;
-        }
-      })
-      return exists;
-    }
-    
-  (async () => {
-    // Start your app
-    await app.start();
-    console.log('⚡️ Bolt app is running!');
-  })();
+    });
+    res.json(transactions);
+});
+
+app.post("/transactions/:userId", async (req, res) => {
+    const userId = parseInt(req.params.userId);
+    const { amount, comment } = req.body;
+    const transaction = await prisma.transaction.create({
+        data: {
+            amount,
+            comment,
+            userId,
+            date: new Date(),
+            causedById: 0,
+        },
+    });
+    await prisma.user.update({
+        data: {
+            credits: {
+                increment: amount,
+            },
+        },
+        where: {
+            id: userId,
+        },
+    });
+    res.json(transaction);
+});
+
+app.get("/users", async (req, res) => {
+    const users = await prisma.user.findMany();
+    res.json(users);
+});
+
+app.post("/users", async (req, res) => {
+    const { slackId, username } = req.body;
+    const user = await prisma.user.create({
+        data: {
+            slackId,
+            username,
+            credits: 0,
+            isSystem: false,
+            
+        },
+    });
+    res.json(user);
+});
+
+app.listen(3000, () => { console.log("Server is running on port 3000") });
