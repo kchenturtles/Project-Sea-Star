@@ -23,6 +23,18 @@ app.get("/transactions/:userId", async (req, res) => {
 app.post("/transactions/:userId", async (req, res) => {
     const userId = parseInt(req.params.userId);
     const { amount, comment } = req.body;
+    const user = await prisma.user.findUnique({
+        where: {
+            id: userId,
+        },
+    });
+    if (!user) {
+        res.status(404).json({ error: "User not found" });
+        return;
+    }
+    if (user.isSystem) {
+        res.status(403).json({ error: "System users cannot have transactions" });
+    }
     const transaction = await prisma.transaction.create({
         data: {
             amount,
@@ -42,7 +54,7 @@ app.post("/transactions/:userId", async (req, res) => {
             id: userId,
         },
     });
-    res.json(transaction);
+    res.status(201).json(transaction);
 });
 
 app.get("/users", async (req, res) => {
