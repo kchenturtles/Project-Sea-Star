@@ -12,12 +12,19 @@ app.use(express.json());
 
 app.get("/transactions/:userId", async (req, res) => {
     const userId = parseInt(req.params.userId);
-    const transactions = await prisma.transaction.findMany({
+    const user = await prisma.user.findUnique({
         where: {
-            userId: userId,
+            id: userId,
+        },
+        include: {
+            transactions: true,
         },
     });
-    res.json(transactions);
+    if (!user) {
+        res.status(404).json({ error: "User not found" });
+        return;
+    }
+    res.json(user.transactions);
 });
 
 app.post("/transactions/:userId", async (req, res) => {
@@ -34,6 +41,7 @@ app.post("/transactions/:userId", async (req, res) => {
     }
     if (user.isSystem) {
         res.status(403).json({ error: "System users cannot have transactions" });
+        return;
     }
     const transaction = await prisma.transaction.create({
         data: {
