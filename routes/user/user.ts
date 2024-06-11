@@ -56,7 +56,11 @@ router.patch("/:userId", async (req, res) => {
             credits,
             slackId,
             username,
-            roleId,
+            role: roleId && {
+                connect: {
+                    id: roleId,
+                },
+            }
         },
         where: {
             id: userId,
