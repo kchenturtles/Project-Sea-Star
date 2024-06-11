@@ -9,12 +9,12 @@ datasource db {
 
 model User {
   id                 Int           @id @default(autoincrement())
-  slackId            String        @unique
+  slackId            String?       @unique
   username           String        @unique
   credits            BigInt
   transactions       Transaction[] @relation("Transactions")
   transactionsCaused Transaction[] @relation("TransactionsCaused")
-  role               Role          @relation(fields: [roleId], references: [id])
+  role               Role?         @relation(fields: [roleId], references: [id])
   roleId             Int
   isSystem           Boolean
 }
