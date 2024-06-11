@@ -1,10 +1,10 @@
 import { Router } from "express";
-import prismaClient from "../services/database.js";
+import prismaClient from "../../services/database.js";
 
 const router = Router();
 
 router.get("/", async (req, res) => {
-    const roles = await res.locals.db.role.findMany();
+    const roles = await prismaClient.role.findMany();
     res.json(roles);
 });
 

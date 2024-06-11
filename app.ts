@@ -1,9 +1,9 @@
 import dotenv from 'dotenv';
 import express from 'express';
 
-import user from './routes/user.js';
-import transaction from './routes/transaction.js';
-import role from './routes/role.js';
+import user from './routes/user/user.js';
+import transaction from './routes/transaction/transaction.js';
+import role from './routes/role/role.js';
 
 dotenv.config();
 

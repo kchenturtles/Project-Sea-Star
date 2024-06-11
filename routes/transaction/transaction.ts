@@ -1,7 +1,26 @@
 import { Router } from "express";
-import prismaClient from "../services/database.js";
+import prismaClient from "../../services/database.js";
 
 const router = Router({ mergeParams: true });
+
+router.get("/", async (req, res) => {
+    const transactions = await prismaClient.transaction.findMany();
+    res.json(transactions);
+});
+
+router.get("/:transactionId", async (req, res) => { 
+    const transactionId = parseInt(req.params.transactionId);
+    const transaction = await prismaClient.transaction.findUnique({
+        where: {
+            id: transactionId,
+        },
+    });
+    if (!transaction) {
+        res.status(404).json({ error: "Transaction not found" });
+        return;
+    }
+    res.json(transaction);
+});
 
 router.patch("/:transactionId", async (req, res) => {
     const transactionId = parseInt(req.params.transactionId);
