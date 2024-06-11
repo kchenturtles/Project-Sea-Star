@@ -43,6 +43,16 @@ router.patch("/:transactionId", async (req, res) => {
             id: transactionId,
         },
     });
+    await prismaClient.user.update({
+        data: {
+            credits: {
+                increment: amount - transaction.amount,
+            },
+        },
+        where: {
+            id: transaction.userId,
+        }
+    });
     res.json({ success: true });
 });
 
