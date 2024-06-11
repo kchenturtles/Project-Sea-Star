@@ -4,11 +4,13 @@ import prismaClient from "../../services/database.js";
 const router = Router({ mergeParams: true });
 
 router.get("/", async (req, res) => {
-    const transactions = await prismaClient.transaction.findMany();
+    const transactions = await prismaClient.transaction.findMany({
+        orderBy: { date: "asc" },
+    });
     res.json(transactions);
 });
 
-router.get("/:transactionId", async (req, res) => { 
+router.get("/:transactionId", async (req, res) => {
     const transactionId = parseInt(req.params.transactionId);
     const transaction = await prismaClient.transaction.findUnique({
         where: {
@@ -51,7 +53,7 @@ router.patch("/:transactionId", async (req, res) => {
         },
         where: {
             id: transaction.userId,
-        }
+        },
     });
     res.json({ success: true });
 });

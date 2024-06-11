@@ -10,7 +10,11 @@ router.get("/", async (req: Request<{ userId: string }>, res) => {
             id: userId,
         },
         include: {
-            transactions: true,
+            transactions: {
+                orderBy: {
+                    date: "asc",
+                },
+            },
         },
     });
     if (!user) {
