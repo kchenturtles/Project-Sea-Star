@@ -1,40 +1,29 @@
-import { Router } from "express";
-import prismaClient from "../../services/database.js";
+import prismaClient from "$lib/database";
+import { json, error } from "@sveltejs/kit";
 
-const router = Router({ mergeParams: true });
-
-router.get("/", async (req, res) => {
-    const transactions = await prismaClient.transaction.findMany({
-        orderBy: { date: "asc" },
-    });
-    res.json(transactions);
-});
-
-router.get("/:transactionId", async (req, res) => {
-    const transactionId = parseInt(req.params.transactionId);
+export const GET = async ({ params }) => {
+    const transactionId = parseInt(params.transactionId);
     const transaction = await prismaClient.transaction.findUnique({
         where: {
             id: transactionId,
         },
     });
     if (!transaction) {
-        res.status(404).json({ error: "Transaction not found" });
-        return;
+        return error(404, "Transaction not found");
     }
-    res.json(transaction);
-});
+    return json(transaction);
+};
 
-router.patch("/:transactionId", async (req, res) => {
-    const transactionId = parseInt(req.params.transactionId);
-    const { amount, comment } = req.body;
+export const PATCH = async ({ params, request }) => {
+    const transactionId = parseInt(params.transactionId);
+    const { amount, comment } = await request.json();
     const transaction = await prismaClient.transaction.findUnique({
         where: {
             id: transactionId,
         },
     });
     if (!transaction) {
-        res.status(404).json({ error: "Transaction not found" });
-        return;
+        return error(404, "Transaction not found");
     }
     await prismaClient.transaction.update({
         data: {
@@ -55,19 +44,18 @@ router.patch("/:transactionId", async (req, res) => {
             id: transaction.userId,
         },
     });
-    res.json({ success: true });
-});
+    return json({ success: true });
+};
 
-router.delete("/:transactionId", async (req, res) => {
-    const transactionId = parseInt(req.params.transactionId);
+export const DELETE = async ({ params }) => {
+    const transactionId = parseInt(params.transactionId);
     const transaction = await prismaClient.transaction.findUnique({
         where: {
             id: transactionId,
         },
     });
     if (!transaction) {
-        res.status(404).json({ error: "Transaction not found" });
-        return;
+        return error(404, "Transaction not found");
     }
     await prismaClient.transaction.delete({
         where: {
@@ -84,7 +72,5 @@ router.delete("/:transactionId", async (req, res) => {
             id: transaction.userId,
         },
     });
-    res.json({ success: true });
-});
-
-export default router;
+    return json({ success: true });
+};

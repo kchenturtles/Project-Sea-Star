@@ -1,10 +1,8 @@
-import { Router, Request } from "express";
-import prismaClient from "../../../services/database.js";
+import prismaClient from "$lib/database";
+import { error, json } from "@sveltejs/kit";
 
-const router = Router({ mergeParams: true });
-
-router.get("/", async (req: Request<{ userId: string }>, res) => {
-    const userId = parseInt(req.params.userId);
+export const GET = async ({ params }) => {
+    const userId = parseInt(params.userId);
     const user = await prismaClient.user.findUnique({
         where: {
             id: userId,
@@ -18,27 +16,24 @@ router.get("/", async (req: Request<{ userId: string }>, res) => {
         },
     });
     if (!user) {
-        res.status(404).json({ error: "User not found" });
-        return;
+        return error(404, "User not found");
     }
-    res.json(user.transactions);
-});
+    return json(user.transactions);
+};
 
-router.post("/", async (req: Request<{ userId: string }>, res) => {
-    const userId = parseInt(req.params.userId);
-    const { amount, comment } = req.body;
+export const POST = async ({ params, request }) => {
+    const userId = parseInt(params.userId);
+    const { amount, comment } = await request.json();
     const user = await prismaClient.user.findUnique({
         where: {
             id: userId,
         },
     });
     if (!user) {
-        res.status(404).json({ error: "User not found" });
-        return;
+        return error(404, "User not found");
     }
     if (user.isSystem) {
-        res.status(403).json({ error: "System users cannot have transactions" });
-        return;
+        return error(403, "System users cannot have transactions");
     }
     const transaction = await prismaClient.transaction.create({
         data: {
@@ -67,8 +62,5 @@ router.post("/", async (req: Request<{ userId: string }>, res) => {
             id: userId,
         },
     });
-    res.status(201).json(transaction);
-});
-
-
-export default router;
+    json(transaction, { status: 201 });
+};
