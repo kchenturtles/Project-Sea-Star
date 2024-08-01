@@ -1,2 +1,6 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<main>
+    <h1>Project Sea Star</h1>
+    <p>Welcome to Project Sea Star!!!</p>
+</main>
+
+<a href="/user">List of Users</a>

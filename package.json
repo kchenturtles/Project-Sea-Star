@@ -12,6 +12,7 @@
 		"format": "prettier --write ."
 	},
 	"dependencies": {
+		"@auth/sveltekit": "^1.4.1",
 		"@prisma/client": "^5.7.1",
 		"@slack/bolt": "^3.17.0"
 	},
